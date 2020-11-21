@@ -1,0 +1,265 @@
+import pygame, sys, time, random
+from pygame.locals import *
+
+#screen size
+screenx = 800
+screeny = 600
+
+#image size
+imgsizex = 175
+imgsizey = 150
+
+#image coordinates
+imgy = screeny/2 - imgsizey/2
+imgx = screenx/2 - imgsizey/2
+
+#Stuff for sprites and background??
+speed = 25
+laserGO = False
+q=2000
+laserx = 1000
+lasery = 1000
+Clock = pygame.time.Clock()
+FPS = 20
+screen = pygame.display.set_mode((screenx, screeny), 0, 32)
+pygame.display.set_caption("Joe Game Time")
+img = pygame.transform.scale(pygame.image.load("spaceG(1).png"), (imgsizex, imgsizey))
+bg = pygame.transform.scale(pygame.image.load("pygame_Bground.png"), (screenx, screeny))
+logo =pygame.transform.scale(pygame.image.load("Joe_Game.png"), (screenx, screeny))
+badguy = pygame.transform.scale(pygame.image.load("AngryCube.png"), (int(imgsizex/2), int(imgsizey/2)))
+n = 0
+moveybad = 100
+movexbad = screenx-100
+badlife = 3
+yourlife = 3
+badballx = 1000
+badbally = 500
+Tsize=1
+
+#Animation
+walkRight = [pygame.transform.scale(pygame.image.load("spaceG(1).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceG(2).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceG(3).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceG(2).png"), (imgsizex, imgsizey)), ]
+walkLeft = [pygame.transform.scale(pygame.image.load("spaceF(1).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceF(2).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceF(3).png"), (imgsizex, imgsizey)), pygame.transform.scale(pygame.image.load("spaceF(2).png"), (imgsizex, imgsizey)), ]
+walkCount = 0
+right = True
+left = False
+#Helth bad
+herts = [pygame.transform.scale(pygame.image.load("3 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("2 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("1 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("ded.png"), (200, 50)) ]
+hertcount = 0
+#Helth good
+yourherts = [pygame.transform.scale(pygame.image.load("3 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("2 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("1 herts.png"), (200, 50)), pygame.transform.scale(pygame.image.load("ded.png"), (200, 50)) ]
+yourhertcount = 0
+
+#Music and logo
+screen.blit(logo, (25, 0))
+pygame.display.flip()
+pygame.display.update()
+pygame.mixer.init(47000)
+pygame.mixer.music.load("80_pygame.mp3")
+pygame.mixer.music.play(-217, 1.75)
+time.sleep(2.4)
+pygame.init() 
+
+#GAME loop
+while True:
+  if yourlife > 0:
+    #Reseting variables go here:
+    if q > screenx*1.05:
+      L_pos = True
+      R_pos = True
+      hit = False
+    screen.blit(bg, (0, 0))
+    runANI = False
+    both = False
+
+    #KEY MOVEMENT while jump, and quit 
+    
+    #Giving up on life code:
+    for event in pygame.event.get():
+      if event.type==QUIT:
+            pygame.quit()
+            sys.exit()
+      #Jump (YES) code      
+      if event.type == KEYDOWN:
+        if (event.key == K_UP):
+          if imgy+50 > screeny - imgsizey:
+            #Jump up legs in animation
+            if left == True:
+              img = pygame.transform.scale(pygame.image.load("spaceF(3).png"), (imgsizex, imgsizey))
+            if right == True:
+              img = pygame.transform.scale(pygame.image.load("spaceG(3).png"), (imgsizex, imgsizey))
+            #Jump up moment
+            for i in range(10):
+                if R_pos == True:
+                  pygame.draw.circle(screen, (0,200,255), (laserx+int(q), lasery), 30, 0)
+                if L_pos == True:
+                  pygame.draw.circle(screen, (0,200,255), (laserx-150-int(q), lasery), 30, 0)
+                q+=speed+5/10
+                badbally+=speed-5/10
+                imgy-=imgsizey/5
+                time.sleep(0.01)
+                #Left or right in jump mode
+                keys_pressed = pygame.key.get_pressed()
+                if keys_pressed[pygame.K_LEFT]:
+                    imgx -= speed
+                if keys_pressed[pygame.K_RIGHT]:
+                    imgx += speed
+                if imgx < 0:
+                  imgx = imgx+speed
+                if imgx+imgsizex > screenx:
+                  imgx = imgx-speed
+                #Displaying images in jump so they dont disapeer
+                screen.blit(bg, (0, 0))
+                screen.blit(herts[hertcount], (screenx-210, 10))
+                screen.blit(img, (imgx, imgy))
+                screen.blit(badguy, (movexbad, moveybad))
+                pygame.draw.circle(screen, (255,255,0), (int(badballx), int(badbally)), 30, 0)
+                screen.blit(yourherts[yourhertcount], (10, 10))
+                pygame.display.flip()
+                pygame.display.update()
+        #Wait Until ball is out of screen 
+        if (event.key == K_SPACE) and q > screenx*1.05:
+          laserGO = True
+          q=0
+          laserx = int(imgx)+imgsizex
+          lasery = int(imgy)+70
+    keys_pressed = pygame.key.get_pressed()
+    #STOP, dont press both keys at once code:
+    if keys_pressed[pygame.K_LEFT] and keys_pressed[pygame.K_RIGHT]:
+        both = True
+    #Left Movement
+    if keys_pressed[pygame.K_LEFT] and both == False:
+        left = True
+        right = False
+        imgx -= speed
+        img = pygame.transform.scale(pygame.image.load("spaceF(1).png"), (imgsizex, imgsizey))
+        screen.blit(walkLeft[walkCount], (imgx,imgy))
+        runANI = True
+        if walkCount < 3:
+          walkCount += 1
+        else:
+          walkCount = 0
+    #Right Movement
+    if keys_pressed[pygame.K_RIGHT] and both == False:
+        right = True
+        left = False
+        imgx += speed
+        img = pygame.transform.scale(pygame.image.load("spaceG(1).png"), (imgsizex, imgsizey))
+        screen.blit(walkRight[walkCount], (imgx,imgy))
+        runANI = True
+        if walkCount < 3:
+          walkCount += 1
+        else:
+          walkCount = 0
+    #Wall barriers  and gravity for human
+    if imgx < 0:
+      imgx = imgx+speed
+    if imgx+imgsizex > screenx:
+      imgx = imgx-speed
+    if imgy < 0:
+      imgy = imgy+speed
+    if imgy+imgsizey > screeny-40:
+      imgy = imgy-speed
+      if left == True:
+        img = pygame.transform.scale(pygame.image.load("spaceF(1).png"), (imgsizex, imgsizey))
+      if right == True:
+        img = pygame.transform.scale(pygame.image.load("spaceG(1).png"), (imgsizex, imgsizey))
+    #Ez gravity
+    imgy += speed
+    #postion if standstill
+    if runANI == False:
+      screen.blit(img, (imgx, imgy))
+    #laser postion shoot
+    if laserGO == True:
+      if right == True and left == False:
+        if R_pos == True:
+          pygame.draw.circle(screen, (0,200,255), (laserx+int(q), lasery), 30, 0)
+          q+=speed+5
+          L_pos = False
+        else:
+          pygame.draw.circle(screen, (0,200,255), (laserx-150-int(q), lasery), 30, 0)
+          q+=speed+5
+      if left == True and right == False:
+        if L_pos == True:
+          pygame.draw.circle(screen, (0,200,255), (laserx-150-int(q), lasery), 30, 0)
+          q+=speed+5
+          R_pos = False
+        else:
+          pygame.draw.circle(screen, (0,200,255), (laserx+int(q), lasery), 30, 0)
+          q+=speed+5
+    #BadGuy movement
+    if n == 0:
+      Yrandombad = random.randint(50, screeny-100)
+      Xrandombad = random.randint(50, screenx-100)
+    n+=FPS
+    if n > FPS:
+      if Yrandombad > moveybad:
+        moveybad += Yrandombad/FPS
+        if moveybad >= Yrandombad:
+          n=0
+      else:
+        moveybad -= Yrandombad/FPS
+        if moveybad <= Yrandombad:
+          n=0
+      
+      if Xrandombad > movexbad:
+        movexbad += Xrandombad/FPS
+        if movexbad >= Xrandombad:
+          n=0
+      else:
+        movexbad -= Xrandombad/FPS
+        if movexbad <= Xrandombad:
+          n=0
+    if badbally > screeny+200:
+      badballx = int(movexbad+int(imgsizex/4)) 
+      badbally = int(moveybad+int(imgsizey/4))
+      hitME = False
+    #killing mechanism
+    
+    #Badguy death
+    badimgside = movexbad+int(imgsizex/2) 
+    badimgbottom = moveybad+int(imgsizey/2)
+    if right == True and laserx+int(q) < badimgside and laserx+int(q) > movexbad and lasery < badimgbottom and lasery > moveybad and hit == False:
+      badlife-=1
+      hertcount+=1
+      hit = True
+    elif left == True and laserx-int(q) < badimgside and laserx-int(q) > movexbad and lasery < badimgbottom and lasery > moveybad and hit == False:
+      badlife-=1
+      hertcount+=1
+      hit = True 
+    
+    #Your death
+    imgside = imgx+int(imgsizex) 
+    imgbottom = imgy+int(imgsizey)
+    if badballx < imgside and badballx > imgx and badbally < imgbottom and badbally > imgy and hitME == False:
+      yourlife-=1
+      yourhertcount+=1
+      hitME = True
+      
+    #Display badguy and health
+    screen.blit(herts[hertcount], (screenx-210, 10))
+    screen.blit(yourherts[yourhertcount], (10, 10))
+    screen.blit(badguy, (movexbad, moveybad))
+    pygame.draw.circle(screen, (255,255,0), (int(badballx), int(badbally)), 30, 0)
+    badbally+=speed-5
+    if badlife <= 0:
+      screen.fill((0, 0, 0))
+      screen.blit(badguy, (movexbad, moveybad))
+      yourlife-=100
+    #Updating
+    pygame.display.flip()
+    pygame.display.update()
+    Clock.tick(FPS)
+  else:
+    #End Game text-Deth
+    if Tsize <= 100:
+      Tsize+=2
+    font =  pygame.font.SysFont('(Times)', Tsize) 
+    text = font.render('YOU WIN!', True, (30, 250, 20), (0, 0, 0) ) 
+    textRect = text.get_rect()  
+    textRect.center = (screenx // 2, screeny // 2) 
+    screen.fill((0,0,0))
+    screen.blit(text, textRect) 
+    pygame.display.flip()
+    pygame.display.update()
+    Clock.tick(FPS)
+    
