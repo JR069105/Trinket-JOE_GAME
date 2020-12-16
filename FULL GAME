@@ -1,0 +1,357 @@
+import pygame, sys, time, random
+from pygame.locals import *
+p = pygame
+p.init()
+
+#screen size
+screenx = 800
+screeny = 600
+
+#image size
+imgsizex = 140
+imgsizey = 120
+
+#image coordinates
+imgy = screeny/2 - imgsizey/2
+imgx = screenx/2 - imgsizey/2
+
+#IMPORTANT!IMPORTANT!!!!!!!!IMPORTANT!!!!!!!!IMPORTANT!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!IMPORTANT!!!
+
+#Difficulty rate of change - (maximum = 10) - (minimum > 0) - (no rate of change = 0)
+diffrate=(5)
+
+#Stuff for sprites and variables??
+scale = p.transform.scale
+load = p.image.load
+speed = 15
+laserGO = False
+q=2000
+laserx = 1000
+lasery = 1000
+Clock = p.time.Clock()
+FPS = 30
+screen = p.display.set_mode((screenx, screeny), 0, 32)
+p.display.set_caption("Joe Game Time")
+img = scale(load("spaceG(1).png"), (imgsizex, imgsizey))
+bg = scale(load("pygame_Bground.png"), (screenx, screeny))
+logo = scale(load("Joe_Game.png"), (screenx, screeny))
+badguy = scale(load("AngryCube.png"), (int(imgsizex/2), int(imgsizey/2)))
+goodguy = scale(load("GoodCube.png"), (int(imgsizex/2), int(imgsizey/2)))
+n = 0
+b = 0
+z=0
+exsizebad=0
+exsizegood=0
+jump=False
+moveybad = 60
+movexbad = screenx-160
+movexgood = 10
+moveygood = 65
+yourlife = 3
+badballx = 1000
+badbally = 500
+diffspeed = 1
+difflength = 1000
+Tsize=1
+
+#Animation
+ANIsize = (imgsizex, imgsizey)
+
+walkRight = [scale(load("spaceG(1).png"), ANIsize), scale(load("spaceG(2).png"), ANIsize), scale(load("spaceG(3).png"), ANIsize), scale(load("spaceG(2).png"), ANIsize)]
+walkLeft =  [scale(load("spaceF(1).png"), ANIsize), scale(load("spaceF(2).png"), ANIsize), scale(load("spaceF(3).png"), ANIsize), scale(load("spaceF(2).png"), ANIsize)]
+walkCount = 0
+right = True
+left = False
+#Helth good
+Hsize = (200, 50)
+yourherts = [scale(load("3 herts.png"), Hsize), scale(load("2 herts.png"), Hsize), scale(load("1 herts.png"), Hsize), scale(load("ded.png"), Hsize)]
+yourhertcount = 0
+#Attack points
+Dsize = (30, 70)
+Digit1 = [scale(load("0.png"), Dsize), scale(load("1.png"), Dsize), scale(load("2.png"), Dsize), scale(load("3.png"), Dsize), scale(load("4.png"), Dsize), scale(load("5.png"), Dsize), scale(load("6.png"), Dsize), scale(load("7.png"), Dsize), scale(load("8.png"), Dsize), scale(load("9.png"), Dsize) ]
+attackCount1 = 0
+
+Digit2 = [scale(load("0.png"), Dsize), scale(load("1.png"), Dsize), scale(load("2.png"), Dsize), scale(load("3.png"), Dsize), scale(load("4.png"), Dsize), scale(load("5.png"), Dsize), scale(load("6.png"), Dsize), scale(load("7.png"), Dsize), scale(load("8.png"), Dsize), scale(load("9.png"), Dsize) ]
+attackCount2 = 0
+
+#logo 
+screen.blit(logo, (25, 0))
+p.display.flip()
+p.display.update()
+
+#GAME loop
+while True:
+  if yourlife > 0:
+    #Reseting variables for laser go here:
+    if q > screenx*1.05:
+      L_pos = True
+      R_pos = True
+      hit = False
+      hitgood = False
+    screen.blit(bg, (0, 0))
+    #Displaying good guy in the bg
+    p.draw.ellipse(screen, (20, 20, 20), (movexgood, screeny/1.2, imgsizex/2, imgsizey/(moveygood/20)))
+    screen.blit(goodguy, (movexgood, moveygood))
+    runANI = False
+    both = False
+
+    #MOVEMENT 
+    for event in p.event.get():
+      #Jump (YES) code      
+      if event.type == KEYDOWN:
+        if (event.key == K_UP):
+          if imgy+50 > screeny - imgsizey:
+            #Jump up legs in animation
+            if left == True:
+              img = scale(load("spaceF(3).png"), (imgsizex, imgsizey))
+            if right == True:
+              img = scale(load("spaceG(3).png"), (imgsizex, imgsizey))
+            #Jump up moment
+            jump=True
+            z=0
+        #Wait Until ball is out of screen to draw 
+        if (event.key == K_SPACE) and q > screenx*1.05:
+          laserGO = True
+          q=0
+          laserx = int(imgx)+imgsizex
+          lasery = int(imgy)+50
+    #Fixed jumping so its not 50 lines of code
+    if jump == True and z < 100:
+      imgy-=(speed*3)
+      z+=10
+    else:
+      jump=False
+    #Getting keys
+    keys_pressed = p.key.get_pressed()
+    #STOP, dont press both keys at once code:
+    if keys_pressed[p.K_LEFT] and keys_pressed[p.K_RIGHT]:
+        both = True
+    #Left Movement
+    if keys_pressed[p.K_LEFT] and both == False:
+        left = True
+        right = False
+        imgx -= speed
+        img = scale(load("spaceF(1).png"), (imgsizex, imgsizey))
+        p.draw.ellipse(screen, (20, 20, 20), (imgx+(imgsizex/3), screeny/1.06, imgsizex/1.5, imgsizey/(imgy/40)))
+        screen.blit(walkLeft[walkCount], (imgx,imgy))
+        runANI = True
+        if walkCount < 3:
+          walkCount += 1
+        else:
+          walkCount = 0
+    #Right Movement
+    if keys_pressed[p.K_RIGHT] and both == False:
+        right = True
+        left = False
+        imgx += speed
+        img = scale(load("spaceG(1).png"), (imgsizex, imgsizey))
+        p.draw.ellipse(screen, (20, 20, 20), (imgx, screeny/1.06, imgsizex/1.5, imgsizey/(imgy/40)))
+        screen.blit(walkRight[walkCount], (imgx,imgy))
+        runANI = True
+        if walkCount < 3:
+          walkCount += 1
+        else:
+          walkCount = 0
+    #Wall barriers  and gravity for human
+    if imgx < 0:
+      imgx = imgx+speed
+    if imgx+imgsizex > screenx:
+      imgx = imgx-speed
+    if imgy < 0:
+      imgy = imgy+speed
+    if imgy+imgsizey > screeny-40:
+      imgy = imgy-speed
+      if left == True:
+        img = scale(load("spaceF(1).png"), (imgsizex, imgsizey))
+      if right == True:
+        img = scale(load("spaceG(1).png"), (imgsizex, imgsizey))
+    #Ez gravity
+    imgy += speed
+    #postion if standstill
+    if runANI == False:
+      if right == True and left == False:
+        p.draw.ellipse(screen, (20, 20, 20), (imgx, screeny/1.06, imgsizex/1.5, imgsizey/(imgy/40)))
+      if left == True and right == False:
+        p.draw.ellipse(screen, (20, 20, 20), (imgx+(imgsizex/3), screeny/1.06, imgsizex/1.5, imgsizey/(imgy/40)))
+      screen.blit(img, (imgx, imgy))
+    #laser postion shoot
+    if laserGO == True:
+      if right == True and left == False:
+        if R_pos == True:
+          p.draw.circle(screen, (0,200,255), (laserx+int(q), lasery), 30, 0)
+          q+=speed+5
+          L_pos = False
+        else:
+          p.draw.circle(screen, (0,200,255), (laserx-150-int(q), lasery), 30, 0)
+          q+=speed+5
+      if left == True and right == False:
+        if L_pos == True:
+          p.draw.circle(screen, (0,200,255), (laserx-150-int(q), lasery), 30, 0)
+          q+=speed+5
+          R_pos = False
+        else:
+          p.draw.circle(screen, (0,200,255), (laserx+int(q), lasery), 30, 0)
+          q+=speed+5
+    #BadGuy movement
+    if n == 0:
+      Yrandombad = random.randint(200, screeny-100)
+      Xrandombad = random.randint(imgx, int(imgx+difflength/3))
+    n+=diffspeed
+    if n > FPS:
+      if Yrandombad > moveybad:
+        moveybad += Yrandombad/FPS
+        if moveybad >= Yrandombad:
+          n=0
+      if Yrandombad < moveybad:
+        moveybad -= Yrandombad/FPS
+        if moveybad <= Yrandombad:
+          n=0
+      
+      if Xrandombad > movexbad:
+        movexbad += Xrandombad/FPS
+        if movexbad >= Xrandombad:
+          n=0
+      if Xrandombad < movexbad:
+        movexbad -= Xrandombad/(FPS/2.5)
+        if movexbad <= Xrandombad:
+          n=0
+    if badbally > screeny+(difflength):
+      badballx = int(movexbad+int(imgsizex/4)) 
+      badbally = int(moveybad+int(imgsizey/4))
+      hitME = False
+    
+    #goodguy movement
+    if b == 0:
+      Xrandomgood = random.randint(0, (screenx-imgsizex/2))
+      Yrandomgood = random.randint(0, ((screeny-imgsizey)-imgsizey/2))
+    b+=diffspeed/2
+    if b > FPS:
+      if Yrandomgood > moveygood:
+        moveygood += Yrandomgood/FPS
+        if moveygood >= Yrandomgood:
+          b=0
+      if Yrandomgood < moveygood:
+        moveygood -= Yrandomgood/FPS
+        if moveygood <= Yrandomgood:
+          b=0
+      
+      if Xrandomgood > movexgood:
+        movexgood += Xrandomgood/FPS
+        if movexgood >= Xrandomgood:
+          b=0
+      if Xrandomgood < movexgood:
+        movexgood -= Xrandomgood/(FPS/2.5)
+        if movexgood <= Xrandomgood:
+          b=0
+    if badbally > screeny+(difflength):
+      badballx = int(movexbad+int(imgsizex/4)) 
+      badbally = int(moveybad+int(imgsizey/4))
+      hitME = False  
+    #killing mechanism
+    
+    #Badguy death
+    badimgside = movexbad+int(imgsizex/2) 
+    badimgbottom = moveybad+int(imgsizey/2)
+    if R_pos == True and laserx+int(q) < badimgside and laserx+int(q) > movexbad and lasery < badimgbottom and lasery > moveybad and hit == False:
+      attackCount1+=1
+      if attackCount1 > 9:
+        attackCount1 = 0
+        attackCount2 += 1
+      hit = True
+      diffspeed+=diffrate
+      if difflength > 100:
+        difflength-=diffrate*100
+      
+    elif L_pos == True and laserx-int(q) < badimgside and laserx-int(q) > movexbad and lasery < badimgbottom and lasery > moveybad and hit == False:
+      attackCount1+=1
+      if attackCount1 > 9:
+        attackCount1 = 0
+        attackCount2 += 1
+      hit = True
+      diffspeed+=diffrate
+      if difflength > 100:
+        difflength-=diffrate*100
+    #goodguy helth addition
+    goodimgside = movexgood+int(imgsizex/2) 
+    goodimgbottom = moveygood+int(imgsizey/2)
+    if R_pos == True and laserx+int(q) < goodimgside and laserx+int(q) > movexgood and lasery < goodimgbottom and lasery > moveygood and hitgood == False:
+      hitgood = True
+      if yourhertcount > 0:
+        yourhertcount-=1
+        yourlife+=1
+      
+    elif L_pos == True and laserx-int(q) < goodimgside and laserx-int(q) > movexgood and lasery < goodimgbottom and lasery > moveygood and hitgood == False:
+      hitgood = True
+      if yourhertcount > 0:
+        yourhertcount-=1
+        yourlife+=1
+      
+    #Your death
+    imgside = imgx+int(imgsizex) 
+    imgbottom = imgy+int(imgsizey)
+    if badballx < imgside and badballx > imgx and badbally < imgbottom and badbally > imgy and hitME == False:
+      yourlife-=1
+      yourhertcount+=1
+      hitME = True
+    #Text for saying Points
+    text = p.font.SysFont('.', 75).render('Score:', True, (0,0,0), (250,250,250)) 
+    screen.blit(text, (screenx/1.245, 0)) 
+    #Display goodguy, badguy, health, points, and shadow for both
+    screen.blit(yourherts[yourhertcount], (10, 10))
+    p.draw.ellipse(screen, (20, 20, 20), (movexbad, screeny/1.05, imgsizex/2, imgsizey/(moveybad/40)))
+    screen.blit(badguy, (movexbad, moveybad))
+    p.draw.circle(screen, (255,255,0), (int(badballx), int(badbally)), 30, 0)
+    p.draw.rect(screen,(250,250,250),(screenx/1.11,50,Dsize[0]+50,Dsize[1]+12))
+    screen.blit(Digit1[attackCount1], (screenx/1.05, 55))
+    screen.blit(Digit2[attackCount2], (screenx/1.102, 55))
+    #Explosion on enemy and good guy
+    
+    #bad expolde
+    if exsizebad > 1:
+      hit = True
+    if hit==True:
+          p.draw.circle(screen, (255,255,255), (int(movexbad+int(imgsizex/4)), int(moveybad+int(imgsizey/4))), exsizebad, 0)
+          exsizebad+=5
+          if exsizebad > 50:
+            hit=False
+            exsizebad=0
+            if L_pos == True:
+              movexbad = screenx+100
+            if R_pos == True:
+              movexbad = -100
+    #good explode
+    if exsizegood > 1:
+      hitgood = True
+    if hitgood==True:
+          p.draw.circle(screen, (255,0,0), (int(movexgood+int(imgsizex/4)), int(moveygood+int(imgsizey/4))), exsizegood, 0)
+          exsizegood+=5
+          if exsizegood > 50:
+            hitgood=False
+            exsizegood=0
+            if L_pos == True:
+              movexgood = screenx+100
+            if R_pos == True:
+              movexgood = -100
+    #move enemy ball
+    badbally+=speed
+   #Updating
+    p.display.flip()
+    p.display.update()
+    Clock.tick(FPS)
+  else:
+    if Tsize <= 100:
+      Tsize+=2
+    font =  p.font.SysFont('(Times)', int(Tsize)) 
+    text1 = font.render('YOU DIED!', True, (250, 30, 20)) 
+    textRect = text1.get_rect()
+    textRect.center = (screenx // 2, screeny // 2) 
+    screen.fill((250,250,250))
+    screen.blit(text1, textRect) 
+    text2 = p.font.SysFont('.', 75).render('Score:', True, (0,0,0)) 
+    screen.blit(text2, (screenx/2.5, screeny/1.65)) 
+    screen.blit(Digit1[attackCount1], (screenx/2, screeny/1.4))
+    screen.blit(Digit2[attackCount2], (screenx/2.25, screeny/1.4))
+    p.display.flip()
+    p.display.update()
+    Clock.tick(FPS)
+    
